@@ -1,56 +1,42 @@
-import prisma from "../db_client/prisma_client.js";
+import prisma from '../../db_client/prisma_client.js';
 
-export const createSales = async (req,res)=>{
-    const {saleItems} = req.body 
+export const totalSalesReport = async(req,res)=>{  
     const shopId = req.salesman.shopId
-    const salesmanId = req.salesman.salesmanId
-    
     try {
-      const sale = await prisma.sale.create({
-        data: {
-          shop: { connect: { id: shopId } },
-          salesman: { connect: { id: salesmanId } },
-          saleItems: {
-            create: saleItems.map(item => ({
-              ...item,
-              shopId: shopId
-            }))
-          }
-        },
-        include: {
-          saleItems: true
-        }
-      });
-  
-      // Calculate profit and total price for each sale item
-      for (const item of sale.saleItems) {
-        await prisma.calculateSaleItemProfitAndUpdateProduct(item.id);
-      }
-  
-      // Calculate the total price of the sale
-      await prisma.calculateSaleTotalPrice(sale.id);
-
-      // Fetch the updated sale with sale items
-      const finalSale = await prisma.sale.findUnique({
-        where: { id: sale.id },
-        include: {
-          saleItems: true,
-        },
-    });
-  
-      res.status(201).json({
-        success:'sale is created',
-        finalSale
-      });
-
-    } catch (error) {
-      res.status(500).json({ error: error.message });
+        const totalSales = await prisma.sale.aggregate({ 
+            where:{shopId}, 
+            _sum:{totalPrice:true}
+        })
+        res.json(totalSales);    
+    } catch (e) {
+        return res.status(500).json({ 
+            error:"Something went wrong", 
+            e
+        })
     }
+    
+}
 
-};
 
+export const salesReportByProduct = async(req,res)=>{  
+    const shopId = req.salesman.shopId
+    try {
+        const salesByProduct = await prisma.saleItem.groupBy({
+            where:{shopId},
+            by:['productId'],
+            _sum:{quantity:true, totalPrice:true},
+        })
+        res.json(salesByProduct);
+    } catch (e) {
+        return res.status(500).json({ 
+            error:"Something went wrong", 
+            e
+        })
+    }
+    
+}
 
-export const fetchSales = async(req,res)=>{  
+export const salesReportByDate = async(req,res)=>{  
     const shopId = req.salesman.shopId
     try {
         const sales  = await prisma.sale.findMany({ 

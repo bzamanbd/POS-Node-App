@@ -69,6 +69,7 @@ CREATE TABLE "SaleItem" (
     "profit" DOUBLE PRECISION NOT NULL DEFAULT 0.0,
     "productId" INTEGER NOT NULL,
     "saleId" INTEGER NOT NULL,
+    "shopId" INTEGER NOT NULL,
 
     CONSTRAINT "SaleItem_pkey" PRIMARY KEY ("id")
 );
@@ -111,3 +112,6 @@ ALTER TABLE "SaleItem" ADD CONSTRAINT "SaleItem_productId_fkey" FOREIGN KEY ("pr
 
 -- AddForeignKey
 ALTER TABLE "SaleItem" ADD CONSTRAINT "SaleItem_saleId_fkey" FOREIGN KEY ("saleId") REFERENCES "Sale"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "SaleItem" ADD CONSTRAINT "SaleItem_shopId_fkey" FOREIGN KEY ("shopId") REFERENCES "Shop"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
