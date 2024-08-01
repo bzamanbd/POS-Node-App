@@ -40,17 +40,18 @@ const prisma = new PrismaClient({
         return { totalPrice, profit };
       },
   
-      async calculateSaleTotalPrice(saleId) {
+      async calculateSaleTotalPriceAndProfit(saleId) {
         const saleItems = await this.saleItem.findMany({
           where: { saleId },
         });
   
         const totalSalePrice = saleItems.reduce((acc, item) => acc + item.totalPrice, 0);
+        const totalProfit = saleItems.reduce((acc, item) => acc + item.profit, 0);
   
         // Update the sale with the calculated total price
         await this.sale.update({
           where: { id: saleId },
-          data: { totalPrice: totalSalePrice },
+          data: { totalPrice: totalSalePrice, profit: totalProfit},
         });
   
         return { totalPrice: totalSalePrice };

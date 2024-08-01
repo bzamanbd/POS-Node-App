@@ -27,8 +27,8 @@ export const createSales = async (req,res)=>{
         await prisma.calculateSaleItemProfitAndUpdateProduct(item.id);
       }
   
-      // Calculate the total price of the sale
-      await prisma.calculateSaleTotalPrice(sale.id);
+      // Calculate the total price and profit of the sale
+      await prisma.calculateSaleTotalPriceAndProfit(sale.id);
 
       // Fetch the updated sale with sale items
       const finalSale = await prisma.sale.findUnique({
