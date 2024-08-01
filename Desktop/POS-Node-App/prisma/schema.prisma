@@ -1,0 +1,88 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Shop {
+  id Int @id @default(autoincrement())
+  shopName String @unique
+  shopAddress String @default("")
+  shopPhone String @default("")
+  salesmen   Salesman[]
+  products   Product[]
+  categories Category[]
+  sales Sale[]
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+}
+
+
+model Salesman {
+  id Int @id @default(autoincrement())
+  name String @unique
+  email String @unique
+  password String
+  shopId Int
+  shop Shop @relation(fields: [shopId], references: [id])
+  sales Sale[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Category {
+  id Int @id @default(autoincrement())
+  name String @unique
+  shopId Int
+  shop Shop @relation(fields: [shopId], references: [id])
+  products Product[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Product {
+  id Int @id @default(autoincrement())
+  name String @unique
+  description String @default("")
+  salePrice Float
+  costPrice  Float
+  quantity Int
+  shopId Int
+  categoryId Int
+  shop Shop @relation(fields: [shopId], references: [id])
+  category Category @relation(fields: [categoryId], references: [id])
+  saleItems SaleItem[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Sale {
+  id Int @id @default(autoincrement())
+  totalPrice Float @default(0.0)
+  shopId Int
+  salesmanId Int
+  shop Shop @relation(fields: [shopId], references: [id])
+  salesman Salesman @relation(fields: [salesmanId], references: [id])
+  saleItems SaleItem[]
+  saleDate DateTime @default(now())
+}
+
+model SaleItem {
+  id Int @id @default(autoincrement())
+  quantity Int
+  totalPrice Float @default(0.0)
+  profit Float @default(0.0)
+  productId Int
+  saleId Int
+  product Product @relation(fields: [productId], references: [id])
+  sale Sale @relation(fields: [saleId], references: [id])
+}
