@@ -60,6 +60,7 @@ export const fetchSales = async(req,res)=>{
              select:{ 
                 id:true,
                 totalPrice: true,
+                profit:true,
                 shop:{select:{ id:true, shopName:true, shopAddress:true, shopPhone:true }},
                 salesman:{select:{ id:true, shopId:true, name:true }},
                 saleItems:{select:{
