@@ -37,49 +37,48 @@ export const salesReportByProduct = async(req,res)=>{
 }
 
 export const salesReportByDate = async(req,res)=>{  
+    const { startDate, endDate } = req.query;
     const shopId = req.salesman.shopId
+    const start = new Date(startDate)
+    const end = new Date(endDate)
+
+    if (!startDate || !endDate) {
+        return res.status(400).json({ error: 'startDate and endDate query parameters are required' });
+      }
+
+    if (isNaN(start) || isNaN(end)) {
+        throw new Error('Invalid date format');
+      }
+
     try {
-        const sales  = await prisma.sale.findMany({ 
-            where:{
+        const salesByDate  = await prisma.sale.findMany({ 
+            where:{ 
                 shopId,
+                saleDate:{ 
+                    gte: start,
+                    lte: end,
+                }
             },
-             select:{ 
-                id:true,
-                totalPrice: true,
-                shop:{select:{ id:true, shopName:true, shopAddress:true, shopPhone:true }},
-                salesman:{select:{ id:true, shopId:true, name:true }},
-                saleItems:{select:{
-                  id: true,
-                  saleId:true,
-                  quantity: true,
-                  totalPrice: true,
-                  profit: true,
-                  product:{select:{
-                    id:true,
-                    shopId:true,
-                    name:true,
-                    description:true,
-                    category:{select:{name:true}},
-                  }}
-                }},
-                saleDate: true,
-             },
+            include: { saleItems: true },
+
+            // where: {
+            //     shopId,
+            //     date: {
+            //       gte: start,
+            //       lte: end,
+            //     },
+            //   },
+            //   include: { saleItems: { include: { product: true } } },
+
         })
-        if (sales.length <1) {
-          return res.status(200).json({ 
-            message:'no sales available. please create a sale',
-            sales
-          })
+        const totalProfit = salesByDate.reduce((acc, sale) => acc + sale.profit, 0);
+        res.json({ totalProfit, salesByDate })
+    } catch (error) {
+        if (error.message === 'Invalid date format') {
+            return res.status(400).json({ error: 'Invalid date format. Please use YYYY-MM-DD format.' });
+        } else {
+            return res.status(500).json({ error: error.message });
         }
-        return res.status(200).json({
-          message:`${sales.length} sales available`,
-          sales
-        })
-    } catch (e) {
-        return res.status(500).json({ 
-            error:"Something went wrong", 
-            e
-        })
     }
     
 }
