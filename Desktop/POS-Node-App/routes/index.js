@@ -6,6 +6,7 @@ import productRoutes from '../product_module/product_routes.js'
 import salesRoutes from '../sales_module/sales_routes.js'
 import salesReports from '../reports_module/sales_report/routes.js'
 import inventoryReports from '../reports_module/inventory_report/routes.js'
+import profitReports from '../reports_module/profit_report/routes.js'
 
 const router = Router()
 
@@ -16,5 +17,6 @@ router.use("/api/products", productRoutes)
 router.use("/api/sales", salesRoutes)
 router.use("/api/reports", salesReports)
 router.use("/api/reports", inventoryReports)
+router.use("/api/reports", profitReports)
 
 export default router

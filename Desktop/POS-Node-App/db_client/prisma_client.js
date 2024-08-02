@@ -56,6 +56,7 @@ const prisma = new PrismaClient({
   
         return { totalPrice: totalSalePrice, profit: totalProfit };
       }
+
     }
   });
 

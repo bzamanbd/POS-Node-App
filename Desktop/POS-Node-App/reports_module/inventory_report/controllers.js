@@ -9,8 +9,8 @@ export const currentInventory = async(req,res)=>{
                 id:true,
                 name:true,
                 quantity:true,
-                category:{select:{name:true}},
-                shop:{select:{shopName:true,shopAddress:true}}
+                // category:{select:{name:true}},
+                // shop:{select:{shopName:true,shopAddress:true}}
             }
         });
         if (inventory.length <1) {
@@ -41,8 +41,8 @@ export const lowStock= async(req,res)=>{
                 id:true,
                 name:true,
                 quantity:true,
-                category:{select:{name:true}},
-                shop:{select:{shopName:true,shopAddress:true}}
+                // category:{select:{name:true}},
+                // shop:{select:{shopName:true,shopAddress:true}}
             }
         })
         if (lowStockProducts.length <1) {

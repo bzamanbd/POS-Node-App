@@ -1,15 +1,15 @@
 import prisma from '../../db_client/prisma_client.js';
 
-export const totalSalesReport = async(req,res)=>{  
+export const totalProfit = async(req,res)=>{  
     const shopId = req.salesman.shopId
     try {
-        const totalSales = await prisma.sale.aggregate({ 
+        const totalProfit = await prisma.sale.aggregate({ 
             where:{shopId}, 
-            _sum:{totalPrice:true}
+            _sum:{profit: true},
         })
         res.status(200).json({
-            message:'The Total Sales',
-            totalSales
+            message:'The Total Profit',
+            totalProfit
         });    
     } catch (e) {
         return res.status(500).json({ 
@@ -20,19 +20,16 @@ export const totalSalesReport = async(req,res)=>{
     
 }
 
-
-export const salesReportByProduct = async(req,res)=>{  
+export const profitByProduct = async(req,res)=>{  
     const shopId = req.salesman.shopId
     try {
-        const sales = await prisma.saleItem.groupBy({
+        const profitByProduct = await prisma.saleItem.groupBy({
             where:{shopId},
             by:['productId'],
-            _sum:{quantity:true, totalPrice:true},
+            _sum:{profit: true,quantity: true},
         })
-        res.status(200).json({
-            message:'Product base sales',
-            sales
-        });
+      
+        res.json({ message:'Product base profit',profitByProduct});
     } catch (e) {
         return res.status(500).json({ 
             error:"Something went wrong", 
@@ -42,7 +39,7 @@ export const salesReportByProduct = async(req,res)=>{
     
 }
 
-export const salesReportByDate = async(req,res)=>{  
+export const profitByDate = async(req,res)=>{  
     const { startDate, endDate } = req.query;
     const shopId = req.salesman.shopId
     const start = new Date(startDate)
@@ -63,13 +60,15 @@ export const salesReportByDate = async(req,res)=>{
                 saleDate:{ 
                     gte: start,
                     lte: end,
-                },
+                }
             },
+            // include: {saleItems: { select:{id:true,quantity:true,productId:true}}},
+                     
         })
-        const totalSales = sales.reduce((acc, sale) => acc + sale.totalPrice, 0);
-        res.status(200).json({ 
-            message:`Total sales from ${start.getDate()}-${start.getMonth()+1}-${start.getFullYear()} to ${end.getDate()}-${end.getMonth()+1}-${end.getFullYear()}`,
-            totalSales,
+        const totalProfit = sales.reduce((acc, sale) => acc + sale.profit, 0);
+        res.status(200).json({
+            message:`Profit from ${start.getDate()}-${start.getMonth()+1}-${start.getFullYear()} to ${end.getDate()}-${end.getMonth()+1}-${start.getFullYear()}`, 
+            totalProfit, 
             sales
         })
     } catch (error) {
