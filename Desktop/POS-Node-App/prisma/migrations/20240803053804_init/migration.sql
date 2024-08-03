@@ -39,6 +39,7 @@ CREATE TABLE "Product" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
     "description" TEXT NOT NULL DEFAULT '',
+    "barcode" TEXT NOT NULL,
     "salePrice" DOUBLE PRECISION NOT NULL,
     "costPrice" DOUBLE PRECISION NOT NULL,
     "quantity" INTEGER NOT NULL,
@@ -89,6 +90,9 @@ CREATE UNIQUE INDEX "Category_name_key" ON "Category"("name");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Product_name_key" ON "Product"("name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Product_barcode_key" ON "Product"("barcode");
 
 -- AddForeignKey
 ALTER TABLE "Salesman" ADD CONSTRAINT "Salesman_shopId_fkey" FOREIGN KEY ("shopId") REFERENCES "Shop"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { isLoggedin } from "../middlewares/isLoggedin.js";
-import { fetchProducts,createProduct } from "./product_controllers.js";
+import { fetchProducts,createProduct,getProductBarcode} from "./product_controllers.js";
 
 const routes = Router() 
 
@@ -10,5 +10,6 @@ routes.get("/",isLoggedin,fetchProducts)
 // routes.put("/:id", authMiddleware, mediaUploader.fields([{name:'images',maxCount:5},{name:'videos',maxCount:2}]), mediaProcessor, editPost) 
 // routes.delete("/:id",authMiddleware, deletePost) 
 routes.post("/product",isLoggedin,createProduct)
+routes.get("/:id/barcode",isLoggedin,getProductBarcode) 
 
 export default routes

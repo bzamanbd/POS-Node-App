@@ -18,13 +18,13 @@ model Shop {
   shopName String @unique
   shopAddress String @default("")
   shopPhone String @default("")
-  salesmen   Salesman[]
-  products   Product[]
+  salesmen Salesman[]
+  products Product[]
   categories Category[]
   sales Sale[]
   saleItems SaleItem[]
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 
@@ -54,9 +54,11 @@ model Product {
   id Int @id @default(autoincrement())
   name String @unique
   description String @default("")
+  barcode String @unique 
   salePrice Float
   costPrice  Float
   quantity Int
+  variants ProductVariant[]
   shopId Int
   categoryId Int
   shop Shop @relation(fields: [shopId], references: [id])
@@ -64,6 +66,16 @@ model Product {
   saleItems SaleItem[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+model ProductVariant {
+  id Int @id @default(autoincrement())
+  productId Int
+  sku String @unique
+  salePrice Float
+  costPrice   Float
+  stock Int
+  attributes Json // Store attributes like size, color, etc.
+  product Product @relation(fields: [productId], references: [id])
 }
 
 model Sale {
