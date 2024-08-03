@@ -180,21 +180,24 @@ export const salesReportByDate = async(req,res)=>{
       }
 
     try {
-        const sales  = await prisma.sale.findMany({ 
+        const salesByDate  = await prisma.sale.findMany({ 
             where:{ 
                 shopId,
                 saleDate:{ 
-                    gte: start,
-                    lte: end,
+                    gte: new Date(startDate),
+                    lte: new Date(endDate),
                 },
             },
+            
         })
-        const totalSales = sales.reduce((acc, sale) => acc + sale.totalPrice, 0);
+        const totalSales = salesByDate.reduce((acc, sale) => acc + sale.totalPrice, 0);
+        
         res.status(200).json({ 
             message:`Total sales from ${start.getDate()}-${start.getMonth()+1}-${start.getFullYear()} to ${end.getDate()}-${end.getMonth()+1}-${end.getFullYear()}`,
             totalSales,
-            sales
+            salesByDate
         })
+
     } catch (error) {
         if (error.message === 'Invalid date format') {
             return res.status(400).json({ error: 'Invalid date format. Please use YYYY-MM-DD format.' });

@@ -52,6 +52,19 @@ CREATE TABLE "Product" (
 );
 
 -- CreateTable
+CREATE TABLE "ProductVariant" (
+    "id" SERIAL NOT NULL,
+    "productId" INTEGER NOT NULL,
+    "sku" TEXT NOT NULL,
+    "salePrice" DOUBLE PRECISION NOT NULL,
+    "costPrice" DOUBLE PRECISION NOT NULL,
+    "stock" INTEGER NOT NULL,
+    "attributes" JSONB NOT NULL,
+
+    CONSTRAINT "ProductVariant_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "Sale" (
     "id" SERIAL NOT NULL,
     "totalPrice" DOUBLE PRECISION NOT NULL DEFAULT 0.0,
@@ -94,6 +107,9 @@ CREATE UNIQUE INDEX "Product_name_key" ON "Product"("name");
 -- CreateIndex
 CREATE UNIQUE INDEX "Product_barcode_key" ON "Product"("barcode");
 
+-- CreateIndex
+CREATE UNIQUE INDEX "ProductVariant_sku_key" ON "ProductVariant"("sku");
+
 -- AddForeignKey
 ALTER TABLE "Salesman" ADD CONSTRAINT "Salesman_shopId_fkey" FOREIGN KEY ("shopId") REFERENCES "Shop"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
@@ -105,6 +121,9 @@ ALTER TABLE "Product" ADD CONSTRAINT "Product_shopId_fkey" FOREIGN KEY ("shopId"
 
 -- AddForeignKey
 ALTER TABLE "Product" ADD CONSTRAINT "Product_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "Category"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ProductVariant" ADD CONSTRAINT "ProductVariant_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Sale" ADD CONSTRAINT "Sale_shopId_fkey" FOREIGN KEY ("shopId") REFERENCES "Shop"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

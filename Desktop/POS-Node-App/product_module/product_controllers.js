@@ -1,13 +1,13 @@
 import prisma from "../db_client/prisma_client.js"
 import { v4 as uuidv4 } from 'uuid';
 import { generateBarcode } from '../utils/barcode_generator.js'
+import { generateSKU } from '../utils/sku_generator.js'
 
 export const createProduct = async (req,res)=>{
-    const {name, description, salePrice,costPrice, quantity, categoryId } = req.body 
+    const {name, description, salePrice,costPrice, quantity, categoryId,variants } = req.body 
     const barcodeText = uuidv4();
     const barcode = generateBarcode(barcodeText)
     const shopId = req.salesman.shopId
-
     try {
         const oldProduct = await prisma.product.findUnique({where:{name}})
         if (!shopId) {
@@ -28,9 +28,19 @@ export const createProduct = async (req,res)=>{
                 salePrice,
                 costPrice,
                 quantity,
+                variants:{
+                    create:variants.map(variant=>({ 
+                        sku:generateSKU(),
+                        salePrice:variant.salePrice,
+                        costPrice:variant.costPrice,
+                        stock:variant.stock,
+                        attributes:variant.attributes,
+                    }))
+                },
                 shop: { connect: { id: shopId } },
                 category: { connect: { id: categoryId } },
-            }
+            },
+            include: { variants: true }
         })
           res.status(201).json({success:'product is created', product});
         } catch (err) {
