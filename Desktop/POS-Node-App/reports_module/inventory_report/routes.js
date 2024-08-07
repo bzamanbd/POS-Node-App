@@ -1,9 +1,9 @@
 import { Router } from "express";
-import { isLoggedin } from "../../middlewares/isLoggedin.js";
+import { isSopOwnerLoggedIn } from "../../middlewares/isShopOwnerLoggedIn.js";
 import { currentInventory,lowStock } from "./controllers.js";
 const routes = Router() 
 
-routes.get("/inventory/current",isLoggedin,currentInventory) 
-routes.get("/inventory/low-stock",isLoggedin,lowStock) 
+routes.get("/inventory/current",isSopOwnerLoggedIn,currentInventory) 
+routes.get("/inventory/low-stock",isSopOwnerLoggedIn,lowStock) 
  
 export default routes

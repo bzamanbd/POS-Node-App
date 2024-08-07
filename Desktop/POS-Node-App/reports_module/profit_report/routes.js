@@ -1,11 +1,11 @@
 import { Router } from "express";
-import { isLoggedin } from "../../middlewares/isLoggedin.js";
+import{isSopOwnerLoggedIn} from '../../middlewares/isShopOwnerLoggedIn.js'
 import { totalProfit,profitByProduct,profitByDate } from "./controllers.js";
 const routes = Router() 
 
-routes.get("/profit/total",isLoggedin,totalProfit) 
-routes.get("/profit/by-product",isLoggedin,profitByProduct) 
-routes.get("/profit/by-date",isLoggedin,profitByDate) 
+routes.get("/profit/total",isSopOwnerLoggedIn,totalProfit) 
+routes.get("/profit/by-product",isSopOwnerLoggedIn,profitByProduct) 
+routes.get("/profit/by-date",isSopOwnerLoggedIn,profitByDate) 
  
 
 

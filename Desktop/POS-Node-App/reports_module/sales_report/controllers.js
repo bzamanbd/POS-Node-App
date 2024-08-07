@@ -1,11 +1,10 @@
 import prisma from '../../db_client/prisma_client.js';
-
 import PDFDocument from 'pdfkit';
-
 import {Parser} from 'json2csv'
+import appErr from '../../utils/appErr.js';
 
-export const totalSalesReport = async(req,res)=>{  
-    const shopId = req.salesman.shopId
+export const totalSalesReport = async(req,res,next)=>{  
+    const shopId = req.shopOwner.shopId
     try {
         const totalSales = await prisma.sale.aggregate({ 
             where:{shopId}, 
@@ -16,17 +15,13 @@ export const totalSalesReport = async(req,res)=>{
             totalSales
         });    
     } catch (e) {
-        return res.status(500).json({ 
-            error:"Something went wrong", 
-            e
-        })
+        return next(appErr(e.message,500))
     }
     
 }
 
-
-export const totalSalesReportPdf = async(req,res)=>{  
-    const shopId = req.salesman.shopId
+export const totalSalesReportPdf = async(req,res,next)=>{  
+    const shopId = req.shopOwner.shopId
     try {
         const totalSales = await prisma.sale.aggregate({ 
             where:{shopId}, 
@@ -47,16 +42,13 @@ export const totalSalesReportPdf = async(req,res)=>{
         doc.pipe(res);
         doc.end();  
     } catch (e) {
-        return res.status(500).json({ 
-            error:"Something went wrong", 
-            e
-        })
+        return next(appErr(e.message,500))
     }
     
 }
 
-export const totalSalesReportCsv = async(req,res)=>{  
-    const shopId = req.salesman.shopId
+export const totalSalesReportCsv = async(req,res,next)=>{  
+    const shopId = req.shopOwner.shopId
     try {
         const totalSales = await prisma.sale.aggregate({ 
             where:{shopId}, 
@@ -71,18 +63,13 @@ export const totalSalesReportCsv = async(req,res)=>{
         res.attachment('total_sales_report.csv');
         res.send(csv);
     } catch (e) {
-        return res.status(500).json({ 
-            error:"Something went wrong", 
-            e
-        })
+        return next(appErr(e.message,500))
     }
     
 }
 
-
-
-export const salesReportByProduct = async(req,res)=>{  
-    const shopId = req.salesman.shopId
+export const salesReportByProduct = async(req,res,next)=>{  
+    const shopId = req.shopOwner.shopId
     try {
         const sales = await prisma.saleItem.groupBy({
             where:{shopId},
@@ -94,18 +81,13 @@ export const salesReportByProduct = async(req,res)=>{
             sales
         });
     } catch (e) {
-        return res.status(500).json({ 
-            error:"Something went wrong", 
-            e
-        })
+        return next(appErr(e.message,500))
     }
     
 }
 
-
-
-export const salesReportByProductCsv = async(req,res)=>{  
-    const shopId = req.salesman.shopId
+export const salesReportByProductCsv = async(req,res,next)=>{  
+    const shopId = req.shopOwner.shopId
     try {
         const sales = await prisma.saleItem.groupBy({
             where:{shopId},
@@ -122,16 +104,13 @@ export const salesReportByProductCsv = async(req,res)=>{
         res.attachment('sales_by_product_report.csv');
         res.send(csv);
     } catch (e) {
-        return res.status(500).json({ 
-            error:"Something went wrong", 
-            e
-        })
+        return next(appErr(e.message,500))
     }
     
 }
 
-export const salesReportByProductPdf = async(req,res)=>{  
-    const shopId = req.salesman.shopId
+export const salesReportByProductPdf = async(req,res,next)=>{  
+    const shopId = req.shopOwner.shopId
     try {
         const sales = await prisma.saleItem.groupBy({
             where:{shopId},
@@ -157,28 +136,21 @@ export const salesReportByProductPdf = async(req,res)=>{
         doc.pipe(res);
         doc.end();
     } catch (e) {
-        return res.status(500).json({ 
-            error:"Something went wrong", 
-            e
-        })
+        return next(appErr(e.message,500))
     }
     
 }
 
-export const salesReportByDate = async(req,res)=>{  
+export const salesReportByDate = async(req,res,next)=>{  
     const { startDate, endDate } = req.query;
-    const shopId = req.salesman.shopId
+    const shopId = req.shopOwner.shopId
     const start = new Date(startDate)
     const end = new Date(endDate)
 
-    if (!startDate || !endDate) {
-        return res.status(400).json({ error: 'startDate and endDate query parameters are required' });
-      }
-
-    if (isNaN(start) || isNaN(end)) {
-        throw new Error('Invalid date format');
-      }
-
+    if (!startDate || !endDate) return next(appErr('startDate and endDate query parameters are required',400))
+    
+    if (isNaN(start) || isNaN(end)) return next(appErr('Invalid date format',400))
+    
     try {
         const salesByDate  = await prisma.sale.findMany({ 
             where:{ 
@@ -198,11 +170,11 @@ export const salesReportByDate = async(req,res)=>{
             salesByDate
         })
 
-    } catch (error) {
-        if (error.message === 'Invalid date format') {
-            return res.status(400).json({ error: 'Invalid date format. Please use YYYY-MM-DD format.' });
+    } catch (e) {
+        if (e.message === 'Invalid date format') {
+            return next(appErr('Invalid date format. Please use YYYY-MM-DD format',400))
         } else {
-            return res.status(500).json({ error: error.message });
+            return next(appErr(e.message,500))
         }
     }
     

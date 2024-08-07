@@ -1,7 +1,8 @@
 import prisma from '../../db_client/prisma_client.js';
+import appErr from '../../utils/appErr.js';
 
-export const currentInventory = async(req,res)=>{  
-    const shopId = req.salesman.shopId
+export const currentInventory = async(req,res,next)=>{  
+    const shopId = req.shopOwner.shopId
     try {
         const inventory = await prisma.product.findMany({ 
             where:{shopId}, 
@@ -18,17 +19,14 @@ export const currentInventory = async(req,res)=>{
         }
         res.status(200).json({message:'Current Inventory', inventory});    
     } catch (e) {
-        return res.status(500).json({ 
-            error:"Something went wrong", 
-            e
-        })
+        return next(appErr(e.message,500))
     }
     
 }
 
 
-export const lowStock= async(req,res)=>{  
-    const shopId = req.salesman.shopId
+export const lowStock= async(req,res,next)=>{  
+    const shopId = req.shopOwner.shopId
     const lowStockThreshold = 10
 
     try {
@@ -53,10 +51,7 @@ export const lowStock= async(req,res)=>{
             lowStockProducts
         });
     } catch (e) {
-        return res.status(500).json({ 
-            error:"Something went wrong", 
-            e
-        })
+        return next(e.message,500)
     }
     
 }

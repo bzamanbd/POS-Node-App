@@ -1,7 +1,8 @@
 import prisma from '../../db_client/prisma_client.js';
+import appErr from '../../utils/appErr.js';
 
-export const totalProfit = async(req,res)=>{  
-    const shopId = req.salesman.shopId
+export const totalProfit = async(req,res,next)=>{  
+    const shopId = req.shopOwner.shopId
     try {
         const totalProfit = await prisma.sale.aggregate({ 
             where:{shopId}, 
@@ -12,16 +13,13 @@ export const totalProfit = async(req,res)=>{
             totalProfit
         });    
     } catch (e) {
-        return res.status(500).json({ 
-            error:"Something went wrong", 
-            e
-        })
+        return next(e.message,500)
     }
     
 }
 
-export const profitByProduct = async(req,res)=>{  
-    const shopId = req.salesman.shopId
+export const profitByProduct = async(req,res,next)=>{  
+    const shopId = req.shopOwner.shopId
     try {
         const profitByProduct = await prisma.saleItem.groupBy({
             where:{shopId},
@@ -31,28 +29,21 @@ export const profitByProduct = async(req,res)=>{
       
         res.json({ message:'Product base profit',profitByProduct});
     } catch (e) {
-        return res.status(500).json({ 
-            error:"Something went wrong", 
-            e
-        })
+        return next(e.message,500)
     }
     
 }
 
-export const profitByDate = async(req,res)=>{  
+export const profitByDate = async(req,res,next)=>{  
     const { startDate, endDate } = req.query;
-    const shopId = req.salesman.shopId
+    const shopId = req.shopOwner.shopId
     const start = new Date(startDate)
     const end = new Date(endDate)
 
-    if (!startDate || !endDate) {
-        return res.status(400).json({ error: 'startDate and endDate query parameters are required' });
-      }
-
-    if (isNaN(start) || isNaN(end)) {
-        throw new Error('Invalid date format');
-      }
-
+    if (!startDate || !endDate) return next(appErr('startDate and endDate query parameters are required',400))
+   
+    if (isNaN(start) || isNaN(end)) return next(appErr('Invalid date format',400))
+       
     try {
         const sales  = await prisma.sale.findMany({ 
             where:{ 
@@ -71,11 +62,11 @@ export const profitByDate = async(req,res)=>{
             totalProfit, 
             sales
         })
-    } catch (error) {
-        if (error.message === 'Invalid date format') {
-            return res.status(400).json({ error: 'Invalid date format. Please use YYYY-MM-DD format.' });
+    } catch (e) {
+        if (e.message === 'Invalid date format') {
+            return next('Invalid date format. Please use YYYY-MM-DD format.',400)
         } else {
-            return res.status(500).json({ error: error.message });
+            return next(e.message,500)
         }
     }
     

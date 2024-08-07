@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { isLoggedin } from "../../middlewares/isLoggedin.js";
+import { isSopOwnerLoggedIn } from "../../middlewares/isShopOwnerLoggedIn.js";
 import { 
     totalSalesReport,
     salesReportByProduct,
@@ -12,13 +12,13 @@ import {
 
 const routes = Router() 
 
-routes.get("/sales/total",isLoggedin,totalSalesReport) 
-routes.get("/sales/total/pdf",isLoggedin,totalSalesReportPdf) 
-routes.get("/sales/total/csv",isLoggedin,totalSalesReportCsv) 
-routes.get("/sales/by-product",isLoggedin,salesReportByProduct) 
-routes.get("/sales/by-product/pdf",isLoggedin,salesReportByProductPdf) 
-routes.get("/sales/by-product/csv",isLoggedin,salesReportByProductCsv) 
-routes.get("/sales/by-date",isLoggedin,salesReportByDate) 
+routes.get("/sales/total",isSopOwnerLoggedIn,totalSalesReport) 
+routes.get("/sales/total/pdf",isSopOwnerLoggedIn,totalSalesReportPdf) 
+routes.get("/sales/total/csv",isSopOwnerLoggedIn,totalSalesReportCsv) 
+routes.get("/sales/by-product",isSopOwnerLoggedIn,salesReportByProduct) 
+routes.get("/sales/by-product/pdf",isSopOwnerLoggedIn,salesReportByProductPdf) 
+routes.get("/sales/by-product/csv",isSopOwnerLoggedIn,salesReportByProductCsv) 
+routes.get("/sales/by-date",isSopOwnerLoggedIn,salesReportByDate) 
  
 
 

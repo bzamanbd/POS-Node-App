@@ -1,6 +1,6 @@
 import { Router } from "express"
 import { signin,createSalesMan,fetchSalesMen,createCategory,fetchCategories,createProduct,
-    fetchProducts,createSale,fetchSales } from "./salesman_controllers.js"
+    fetchProducts,createSale,fetchSales } from "./controllers.js"
 import { isSopOwnerLoggedIn, isShopOwner } from '../middlewares/isShopOwnerLoggedIn.js'
 
 const routes = Router() 

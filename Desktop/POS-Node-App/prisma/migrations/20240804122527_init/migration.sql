@@ -1,9 +1,39 @@
+-- CreateEnum
+CREATE TYPE "Role" AS ENUM ('SUPERADMIN', 'SHOP_OWNER');
+
+-- CreateTable
+CREATE TABLE "User" (
+    "id" SERIAL NOT NULL,
+    "name" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "password" TEXT NOT NULL,
+    "role" "Role" NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "User_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "ShopOwner" (
+    "id" SERIAL NOT NULL,
+    "name" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "password" TEXT NOT NULL,
+    "shopId" INTEGER NOT NULL,
+    "role" "Role" NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "ShopOwner_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateTable
 CREATE TABLE "Shop" (
     "id" SERIAL NOT NULL,
     "shopName" TEXT NOT NULL,
     "shopAddress" TEXT NOT NULL DEFAULT '',
-    "shopPhone" TEXT NOT NULL DEFAULT '',
+    "shopPhone" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -90,7 +120,13 @@ CREATE TABLE "SaleItem" (
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Shop_shopName_key" ON "Shop"("shopName");
+CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ShopOwner_email_key" ON "ShopOwner"("email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Shop_shopPhone_key" ON "Shop"("shopPhone");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Salesman_name_key" ON "Salesman"("name");
@@ -109,6 +145,9 @@ CREATE UNIQUE INDEX "Product_barcode_key" ON "Product"("barcode");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "ProductVariant_sku_key" ON "ProductVariant"("sku");
+
+-- AddForeignKey
+ALTER TABLE "ShopOwner" ADD CONSTRAINT "ShopOwner_shopId_fkey" FOREIGN KEY ("shopId") REFERENCES "Shop"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Salesman" ADD CONSTRAINT "Salesman_shopId_fkey" FOREIGN KEY ("shopId") REFERENCES "Shop"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
