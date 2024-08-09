@@ -3,12 +3,12 @@ import "dotenv/config"
 import jwt from "jsonwebtoken"
 import appErr from "../utils/appErr.js";
 
-// Middleware to authenticate and set user in request
+
 export const isSalesmanLoggedIn = async (req, res, next) => {
 
   const authHeader = req.headers.authorization;
     
-  if (!authHeader) return next(appErr('No token provided',400))
+  if (!authHeader) return next(appErr('No token provided',401))
 
   const token = authHeader.split(' ')[1];
       
@@ -22,9 +22,12 @@ export const isSalesmanLoggedIn = async (req, res, next) => {
     console.log(salesMan);
     
     if (!salesMan) return next(appErr('Unauthorized',401))
+
     req.salesMan = salesMan;
+
     next();
+
   } catch (e) {
-    return next(appErr("Forbidden, only shop-owner and salesman has permission",401))
+    return next(appErr('Tocken is expired or incorrect',498))
   }
   }

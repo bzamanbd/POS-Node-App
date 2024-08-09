@@ -2,18 +2,18 @@ import prisma from '../../db_client/prisma_client.js';
 import PDFDocument from 'pdfkit';
 import {Parser} from 'json2csv'
 import appErr from '../../utils/appErr.js';
+import appRes from '../../utils/appRes.js';
 
 export const totalSalesReport = async(req,res,next)=>{  
     const shopId = req.shopOwner.shopId
+    if(!shopId) return next(appErr('shopId is required',400))
     try {
         const totalSales = await prisma.sale.aggregate({ 
             where:{shopId}, 
             _sum:{totalPrice:true}
         })
-        res.status(200).json({
-            message:'The Total Sales',
-            totalSales
-        });    
+        if(!totalSales) return appRes(res,404,'False','No sales found!',{totalSales}) 
+        appRes(res,200,'','The Total Sales',{totalSales})    
     } catch (e) {
         return next(appErr(e.message,500))
     }
@@ -22,6 +22,9 @@ export const totalSalesReport = async(req,res,next)=>{
 
 export const totalSalesReportPdf = async(req,res,next)=>{  
     const shopId = req.shopOwner.shopId
+    
+    if(!shopId) return next(appErr('shopId is required',400))
+
     try {
         const totalSales = await prisma.sale.aggregate({ 
             where:{shopId}, 
@@ -49,6 +52,7 @@ export const totalSalesReportPdf = async(req,res,next)=>{
 
 export const totalSalesReportCsv = async(req,res,next)=>{  
     const shopId = req.shopOwner.shopId
+    if(!shopId)return next(appErr('shopId is required',400))
     try {
         const totalSales = await prisma.sale.aggregate({ 
             where:{shopId}, 
@@ -70,16 +74,15 @@ export const totalSalesReportCsv = async(req,res,next)=>{
 
 export const salesReportByProduct = async(req,res,next)=>{  
     const shopId = req.shopOwner.shopId
+    if(!shopId)return next(appErr('shopId is required',400))
     try {
         const sales = await prisma.saleItem.groupBy({
             where:{shopId},
             by:['productId'],
             _sum:{quantity:true, totalPrice:true},
         })
-        res.status(200).json({
-            message:'Product base sales',
-            sales
-        });
+        if(!sales) return appRes(res,404,'False','No sales found!',{sales})
+        appRes(res,200,'','Product base sales!',{sales})
     } catch (e) {
         return next(appErr(e.message,500))
     }
@@ -88,6 +91,7 @@ export const salesReportByProduct = async(req,res,next)=>{
 
 export const salesReportByProductCsv = async(req,res,next)=>{  
     const shopId = req.shopOwner.shopId
+    if(!shopId)return next(appErr('shopId is required',400))
     try {
         const sales = await prisma.saleItem.groupBy({
             where:{shopId},
@@ -111,6 +115,7 @@ export const salesReportByProductCsv = async(req,res,next)=>{
 
 export const salesReportByProductPdf = async(req,res,next)=>{  
     const shopId = req.shopOwner.shopId
+    if(!shopId)return next(appErr('shopId is required',400))
     try {
         const sales = await prisma.saleItem.groupBy({
             where:{shopId},
@@ -147,7 +152,7 @@ export const salesReportByDate = async(req,res,next)=>{
     const start = new Date(startDate)
     const end = new Date(endDate)
 
-    if (!startDate || !endDate) return next(appErr('startDate and endDate query parameters are required',400))
+    if ( !shopId || !startDate || !endDate) return next(appErr('shopId,startDate and endDate are required',400))
     
     if (isNaN(start) || isNaN(end)) return next(appErr('Invalid date format',400))
     
@@ -162,14 +167,12 @@ export const salesReportByDate = async(req,res,next)=>{
             },
             
         })
+
+        if(!salesByDate) return appRes(res,404,'False','No sales found!',{salesByDate})
         const totalSales = salesByDate.reduce((acc, sale) => acc + sale.totalPrice, 0);
         
-        res.status(200).json({ 
-            message:`Total sales from ${start.getDate()}-${start.getMonth()+1}-${start.getFullYear()} to ${end.getDate()}-${end.getMonth()+1}-${end.getFullYear()}`,
-            totalSales,
-            salesByDate
-        })
-
+        appRes(res,200,'', `Total sales from ${start.getDate()}-${start.getMonth()+1}-${start.getFullYear()} to ${end.getDate()}-${end.getMonth()+1}-${end.getFullYear()}`, {totalSales,salesByDate})
+        
     } catch (e) {
         if (e.message === 'Invalid date format') {
             return next(appErr('Invalid date format. Please use YYYY-MM-DD format',400))

@@ -8,7 +8,7 @@ export const isSopOwnerLoggedIn = async (req, res, next) => {
 
   const authHeader = req.headers.authorization;
     
-  if (!authHeader) return next(appErr('No token provided',400))
+  if (!authHeader) return next(appErr('No token provided',401))
 
   const token = authHeader.split(' ')[1];
       
@@ -24,13 +24,13 @@ export const isSopOwnerLoggedIn = async (req, res, next) => {
     if (!shopOwner) return next(appErr('Unauthorized',401))
     req.shopOwner = shopOwner;
     next();
-  } catch (err) {
-    return next(appErr("Forbidden, only shop-owner has permission",401))
+  } catch (e) {
+    return next(appErr('Tocken is expired or incorrect',498))
   }
   };
   
 // Middleware to check if user is shopOwner
 export const isShopOwner = (req, res, next) => {
-  if (req.shopOwner.role !== 'SHOP_OWNER') return next(appErr('Unauthorized',401))
+  if (req.shopOwner.role !== 'SHOP_OWNER') return next(appErr('Forbidden',403))
   next();
 };

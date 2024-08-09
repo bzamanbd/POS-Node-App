@@ -1,5 +1,6 @@
 import prisma from "../db_client/prisma_client.js"
 import appErr from '../utils/appErr.js'
+import appRes from '../utils/appRes.js'
 import bcrypt from "bcryptjs"
 import { v4 as uuidv4 } from 'uuid';
 import { generateBarcode } from '../utils/barcode_generator.js'
@@ -9,16 +10,14 @@ import 'dotenv/config'
 
 export const signin = async(req,res,next)=>{ 
     const {email,password} = req.body
+    if (!email || !password) return next(appErr('email and password is required',400))
     try {
         const shopOwner = await prisma.shopOwner.findUnique({ where:{email}})
         if (shopOwner && bcrypt.compare(password, shopOwner.password)) {
             const tocken = jwt.sign({id:shopOwner.id, email:shopOwner.email},process.env.JWT_SECRET,{expiresIn: '1h'}) 
-            return res.status(200).json({ 
-                message:"Login success!", 
-                tocken
-            })
+            appRes(res,200,'', 'Login success!', {tocken})
         }
-        return next(appErr('user credential is wrong!',400))        
+        return next(appErr('wrong credential!',400))        
     } catch (e) {
         return next(appErr(e.message,500))
     } 
@@ -28,15 +27,12 @@ export const signin = async(req,res,next)=>{
 export const createCategory = async(req, res,next)=>{ 
     const {name} = req.body 
     const shopId = req.shopOwner.id
+    if(!name || !shopId)return next(appErr('name and shopId is required',400))
     try { 
         const oldCategory = await prisma.category.findUnique({where:{name}})
-        if (oldCategory)return next(appErr(`${oldCategory} is already available`,401))
+        if (oldCategory)return next(appErr(`${oldCategory.name} is already exist`,409))
         const category = await prisma.category.create({data:{ shopId,name }})
-        res.status(201).json({
-            success:`${category.name} is created`,
-            category
-        })
-
+        appRes(res,201,'',`${category.name} is created`,{category})
     } catch (e) {
         return next(appErr(e.message,500))
     }
@@ -46,12 +42,15 @@ export const createProduct = async(req, res,next)=>{
     const {name, description, salePrice,costPrice,quantity,categoryId,variants } = req.body 
     const barcodeText = uuidv4();
     const barcode = generateBarcode(barcodeText)
-    const shopId = req.shopOwner.shopId
+    const shopId = req.shopOwner.shopId 
+
+    if(!name || !salePrice || !costPrice || !quantity || !categoryId || !variants || !barcode || !shopId) return next(appErr('name,salePrice,costPrice,quantity,categoryId,variants,barcode,shopId are required',400))
+
     try {
         const oldProduct = await prisma.product.findUnique({where:{name}})
         if (!shopId) return next(appErr("Unauthorized. Please login as shop-owner to create ",401))
             
-        if (oldProduct) return next(appErr(`${oldProduct.name} already exist. Please try another`,401))
+        if (oldProduct) return next(appErr(`${oldProduct.name} already exist. Please try another`,409))
         const product = await prisma.product.create({ 
             data:{ 
                 name,
@@ -74,7 +73,7 @@ export const createProduct = async(req, res,next)=>{
             },
             include: { variants: true }
         })
-          res.status(201).json({success:'product is created', product});
+        appRes(res,201,'','product is created', {product})
         } catch (e) {
             return next(appErr(e.message,500))
         }
@@ -84,6 +83,8 @@ export const createProduct = async(req, res,next)=>{
 export const createSalesMan = async(req, res,next)=>{ 
     const {name,email,password} = req.body
     const shopId = req.shopOwner.shopId
+    if(!name || !email|| !password || !shopId)return next(appErr('name,email,password and shopId are required',400))
+
     const hashedPass = await bcrypt.hash(password, 10) 
 
     try { 
@@ -94,78 +95,27 @@ export const createSalesMan = async(req, res,next)=>{
         const salesMan = await prisma.salesman.create({ 
             data:{ shopId,name,email,password:hashedPass }
         })
+        salesMan.password = undefined
+        appRes(res,201,'','SalesMan is registered',{salesMan})
 
-        res.status(201).json({
-            success:'SalesMan is registered',
-            salesMan
-        })
     } catch (e) {
         return next(appErr(e.message,500))
     }
-}
-
-export const createSale = async (req,res,next)=>{
-    const {saleItems} = req.body 
-    const shopId = req.shopOwner.shopId
-    const salesmanId = req.shopOwner.id
-    
-    try {
-      const sale = await prisma.sale.create({
-        data: {
-          shop: { connect: { id: parseInt(shopId) } },
-          salesman: { connect: { id: parseInt(salesmanId) } },
-          saleItems: {
-            create: saleItems.map(item => ({
-              ...item,
-              shopId: parseInt(shopId) 
-            }))
-          }
-        },
-        include: {
-          saleItems: true
-        }
-      });
-  
-      // Calculate profit and total price for each sale item
-      for (const item of sale.saleItems) {
-        await prisma.calculateSaleItemProfitAndUpdateProduct(item.id);
-      }
-  
-      // Calculate the total price and profit of the sale
-      await prisma.calculateSaleTotalPriceAndProfit(sale.id);
-
-      // Fetch the updated sale with sale items
-      const finalSale = await prisma.sale.findUnique({
-        where: { id: sale.id },
-        include: {
-          saleItems: true,
-        },
-    });
-  
-      res.status(201).json({
-        success:'sale is created',
-        finalSale
-      });
-
-    } catch (e) {
-      return next(appErr(e.message,500))
-    }
-
 }
 
 export const fetchCategories = async(req, res,next)=>{ 
     
     const shopId = req.shopOwner.shopId
 
+    if(!shopId)return next(appErr('shopId is required',400))
+
     try { 
         const categories = await prisma.category.findMany({where:{shopId}})
     
-        if (!categories) return next(appErr('No category found', 404))
-            
-        res.status(200).json({ 
-            message:`${categories.length} category found`,
-            categories
-        })
+        if (categories.length <1) return appRes(res,404,'False','No category found',{categories})
+        
+        appRes(res,200,'',`${categories.length} category found`,{categories})
+        
     } catch (e) {
         return next(appErr(e.message,500))
     }
@@ -173,6 +123,7 @@ export const fetchCategories = async(req, res,next)=>{
 
 export const fetchProducts = async(req,res,next)=>{  
     const shopId = req.shopOwner.shopId
+    if(!shopId)return next(appErr('shopId is required',400))
     try {
         const products  = await prisma.product.findMany({ 
             where:{
@@ -191,35 +142,26 @@ export const fetchProducts = async(req,res,next)=>{
                 updatedAt:true
             }
         })
-        if (products.length <1) {
-            return res.status(200).json({ 
-                message:'no product available. please create a product',
-                products
-            })
-        }
+        if (products.length <1) appRes(res,200,'False','no product available',{products}) 
         
-        return res.status(200).json({ 
-            message:`${products.length} product found`,
-            products
-        })
+        appRes(res,200,'',`${products.length} product found`,{products})
+        
     } catch (e) {
-        return res.status(500).json({ 
-            error:"Something went wrong", 
-            e
-        })
+        return next(appErr(e.message,500))
     }
     
 }
 
 export const fetchSalesMen = async(req, res,next)=>{ 
     const shopId = req.shopOwner.shopId
+    if(!shopId)return next(appErr('shopId is required',400))
     try { 
         const salesMen = await prisma.salesman.findMany({where:{shopId}})
+        
         if (!salesMen) return next(appErr('No SalesMen available',404))
-        res.status(200).json({ 
-            message:`${salesMen.length} SalesMan found`,
-            salesMen
-        })
+
+            appRes(res,200,'',`${salesMen.length} SalesMan found`,{salesMen})
+
     } catch (e) {
         return next(appErr(e.message,500))
     }
@@ -228,6 +170,7 @@ export const fetchSalesMen = async(req, res,next)=>{
 
 export const fetchSales = async(req,res,next)=>{  
     const shopId = req.shopOwner.shopId
+    if(!shopId)return next(appErr('shopId is required',400))
     try {
         const sales  = await prisma.sale.findMany({ 
             where:{
@@ -256,16 +199,8 @@ export const fetchSales = async(req,res,next)=>{
                 saleDate: true,
              },
         })
-        if (sales.length <1) {
-          return res.status(200).json({ 
-            message:'no sales available. please create a sale',
-            sales
-          })
-        }
-        return res.status(200).json({
-          message:`${sales.length} sales available`,
-          sales
-        })
+        if (sales.length <1)return appRes(res,404,'False','No sales found!',{sales})
+        appRes(res,200,'',`${sales.length} sales available`,{sales})
     } catch (e) {
        return next(appErr(e.message,500))
     }
